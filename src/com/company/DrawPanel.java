@@ -10,28 +10,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
-public class DrawPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener, ActionListener {
+public class DrawPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener {
 
     private final ScreenConverter screenConverter = new ScreenConverter(-2, 2, 4, 4, 800, 600);
     private final List<Line> allLines = new ArrayList<>();
-    private final HashMap<Line, List<Circle>> listWithCircle = new HashMap<>();
     private final List<Circle> allCircle = new ArrayList<>();
-    private final List<Circle> redactingCircle = new ArrayList<>();
+    private final List<BrokenLine> brokenLines = new ArrayList<>();
     private final Line xAxis = new Line(new RealPoint(-1, 0), new RealPoint(1, 0));
     private final Line yAxis = new Line(new RealPoint(0, -1), new RealPoint(0, 1));
-    private int radius = 5;
 
     public DrawPanel() { //alt + enter - реализуем самостоятельно listener
         this.addMouseMotionListener(this); //на движение мышки
         this.addMouseListener(this); //
         this.addMouseWheelListener(this);
         this.addKeyListener(this);
-
     }
 
     @Override
@@ -49,8 +44,8 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         LineDrawer lineDrawer = new BresenhamDrawer(pixelDrawer);
         OvalDrawer ovalDrawer = new BresenhamDrawer(pixelDrawer);
 
-        drawLine(lineDrawer, xAxis);
-        drawLine(lineDrawer, yAxis);
+        //drawLine(lineDrawer, xAxis);
+        //drawLine(lineDrawer, yAxis);
 
         for (Line line : allLines) {
             drawLine(lineDrawer, line);
@@ -59,16 +54,10 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             }
         }
 
-        for (Map.Entry<Line, List<Circle>> entry : listWithCircle.entrySet()) {
-            drawLine(lineDrawer, entry.getKey());
-            if (currentLine != null) {
-                drawLine(lineDrawer, currentLine);
-            }
-            for (Circle circle : entry.getValue()) {
-                drawCircle(ovalDrawer, circle);
-                if (currentCircle != null) {
-                    drawCircle(ovalDrawer, currentCircle);
-                }
+        for (Circle circle : allCircle){
+            drawCircle(ovalDrawer, circle);
+            if(currentCircle != null){
+                drawCircle(ovalDrawer, currentCircle);
             }
         }
 
@@ -84,15 +73,17 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         ovalDrawer.drawOval(screenConverter.R2S(circle.getCenter()), (int) circle.getSize(), (int) circle.getSize(), circle.getColor());
     }
 
+    public void clearField(){
+        allLines.clear();
+        allCircle.clear();
+        repaint();
+    }
 
     private ScreenPoint lastPosition = null;
     private Line currentLine = null;
     private Circle currentCircle = null;
-    private boolean redactor = false;
-    private boolean pressButton = false;
-    private boolean clicks = false;
-    private int count = 0;
-    private List<Circle> circles = new ArrayList<>();
+    private boolean createBrokenLine = true;
+    private boolean redaction = false;
 
     @Override
     public void mouseDragged(MouseEvent e) { //движение с зажатой кнопкой мыши
@@ -111,23 +102,10 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         }
 
         if (currentLine != null) {
-
-            if (redactor && countDistanceBetweenPoints(currentPosition.getX(), currentPosition.getY(), currentLine.getP1().getX(), currentLine.getP1().getY()) < 5) {
-                currentLine.setP1(screenConverter.S2R(currentPosition));
-                currentLine.setP2(currentLine.getP2());
-            } else if (redactor && countDistanceBetweenPoints(currentPosition.getX(), currentPosition.getY(), currentLine.getP2().getX(), currentLine.getP2().getY()) < 5) {
-                currentLine.setP2(screenConverter.S2R(currentPosition));
-                currentLine.setP1(currentLine.getP1());
-            } else {
-                currentLine.setP2(screenConverter.S2R(currentPosition));
-            }
-
-            if (currentCircle != null) {
-                currentCircle.setCenter(screenConverter.S2R(currentPosition));
-            }
-
+            currentLine.setP2(screenConverter.S2R(currentPosition));
+            currentCircle.setCenter(screenConverter.S2R(currentPosition));
+            //System.out.print("drag");
         }
-
 
         repaint();
     }
@@ -135,169 +113,65 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     @Override
     public void mouseMoved(MouseEvent e) {
         ScreenPoint currentPosition = new ScreenPoint(e.getX(), e.getY());
-        if (currentLine != null) {
+
+        if (currentLine != null && createBrokenLine) {
             currentLine.setP2(screenConverter.S2R(currentPosition));
+            currentCircle.setCenter(screenConverter.S2R(currentPosition));
+            //System.out.print("move");
         }
+
+        if(currentLine != null && redaction){
+
+        }
+
+        repaint();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
         ScreenPoint currentPosition = new ScreenPoint(e.getX(), e.getY());
 
-//        if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-//            currentCircle = new Circle(screenConverter.S2R(currentPosition), 5);
-//            allCircle.add(currentCircle);
-//            currentCircle = null;
-//        }
-
-        double distance;
-        double min = Integer.MAX_VALUE;
-
-        for (Line line : allLines) {
-            distance = countDistanceToLine(e.getX(), e.getY(), line);
-            if (distance < min) {
-                min = distance;
-                currentLine = line;
-            }
-        }
-
-        if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && min < 10) {
-            redactor = true;
-            List<Circle> circles = new ArrayList<>();
-
-            currentCircle = new Circle(currentLine.getP1(), radius);
-            currentCircle.setColor(Color.RED);
-            circles.add(currentCircle);
-
-            currentCircle = new Circle(currentLine.getP2(), radius);
-            currentCircle.setColor(Color.RED);
-            circles.add(currentCircle);
-            listWithCircle.put(currentLine, circles);
-        }
-
         if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-            if (count % 2 == 0) {
-                currentLine = new Line(
-                        screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())),
-                        screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
-                System.out.println("Создал " + e.getX() + " " + e.getY());
-            } else {
-                System.out.println(currentLine.getP1().getX() + " " + currentLine.getP1().getY());
-                System.out.println("Закончил " + e.getX() + " " + e.getY());
-                currentLine.setP2(screenConverter.S2R(currentPosition));
-                currentLine = null;
-            }
-            count++;
-            clicks = true;
+            allLines.add(currentLine);
+            allCircle.add(currentCircle);
+            createBrokenLine = true;
         }
+
+        if(e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1){
+            allLines.add(currentLine);
+            allCircle.add(currentCircle);
+            createBrokenLine = false;
+        }
+
         repaint();
-    }
-
-    private double countDistanceToLine(int x, int y, Line line) {
-        ScreenPoint p1 = screenConverter.R2S(line.getP1());
-        ScreenPoint p2 = screenConverter.R2S(line.getP2());
-
-        double numerator = (p1.getY() - p2.getY()) * x
-                + (p2.getX() - p1.getX()) * y
-                + (p1.getX() * p2.getY() - p2.getX() * p1.getY());
-
-        double denominator = Math.pow(
-                Math.pow(p2.getX() - p1.getX(), 2)
-                        + Math.pow(p2.getY() - p1.getY(), 2), 0.5);
-
-
-        return Math.abs(numerator / denominator);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON3) {
             lastPosition = new ScreenPoint(e.getX(), e.getY());
-        } else if (!redactor && e.getButton() == MouseEvent.BUTTON1) {
-//            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), 5);
-//            allCircle.add(currentCircle);
+        } else if (e.getButton() == MouseEvent.BUTTON1) {
             currentLine = new Line(
                     screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())),
                     screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
-        } else if (redactor && e.getButton() == MouseEvent.BUTTON1 && countDistanceForCircle(e.getX(), e.getY()) < 5) {
-            RealPoint p1 = currentLine.getP1();
-            RealPoint p2 = currentLine.getP2();
-            Circle circleEnd;
-
-            RealPoint position = screenConverter.S2R(new ScreenPoint(e.getX(), e.getY()));
-
-//            if (countDistanceBetweenPoints(position.getX(), position.getY(), p1.getX(), p1.getY())
-//                    < countDistanceBetweenPoints(position.getX(), position.getY(), p2.getX(), p2.getY())) {
-//                listWithCircle.remove(currentLine);
-//                currentLine = new Line(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), p2);
-//                circleEnd = new Circle(p2, radius);
-//                circles.add(circleEnd);
-//            } else {
-//                listWithCircle.remove(currentLine);
-//                currentLine = new Line(p1, screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
-//                circleEnd = new Circle(p1, radius);
-//                circles.add(circleEnd);
-//            }
-            listWithCircle.remove(currentLine);
-            currentLine = new Line(p1, screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
-            circleEnd = new Circle(p1, radius);
-            circles.add(circleEnd);
-            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), radius);
-            //currentCircle.setCenter(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
+            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), 5);
+            allCircle.add(currentCircle);
         }
-
         repaint();
     } //нажимаем
-
-    private double countDistanceForCircle(double x, double y) {
-        double distance;
-        double min = Integer.MAX_VALUE;
-        Circle redactingCircle = null;
-
-//        for (Circle circle : allCircle) {
-//            distance = count(x, y, circle.getCenter().getX(), circle.getCenter().getY());
-//            if (distance < min) {
-//                min = distance;
-//                redactingCircle = circle;
-//            }
-//        }
-
-        for (Circle circle : listWithCircle.get(currentLine)) {
-            distance = countDistanceBetweenPoints(x, y, circle.getCenter().getX(), circle.getCenter().getY());
-            if (distance < min) {
-                min = distance;
-                redactingCircle = circle;
-            }
-        }
-        listWithCircle.get(currentLine).remove(redactingCircle);
-
-        currentCircle = redactingCircle;
-        return min;
-    }
-
-    private double countDistanceBetweenPoints(double x1, double y1, double x2, double y2) {
-        double xSquare = Math.pow(x2 - x1, 2);
-        double ySquare = Math.pow(y2 - y1, 2);
-        return Math.pow(xSquare + ySquare, 0.5);
-    }
 
     @Override
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON3) {
             lastPosition = null;
-        } else if (!redactor && e.getButton() == MouseEvent.BUTTON1) {
-//            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), 5);
-//            allCircle.add(currentCircle);
+        } else if (e.getButton() == MouseEvent.BUTTON1) {
+            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), 5);
+            allCircle.add(currentCircle);
             allLines.add(currentLine);
-            currentLine = null;
-        } else if (redactor && e.getButton() == MouseEvent.BUTTON1) {
-            circles.add(currentCircle);
-            listWithCircle.put(currentLine, circles);
-            //redactingCircle.add(currentCircle);
-            //allLines.add(currentLine);
-            currentCircle = null;
-            currentLine = null;
-            redactor = false;
+            currentLine = new Line(
+                    screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())),
+                    screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
+
         }
         repaint();
     } //отпускаем
@@ -339,7 +213,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
     @Override
     public void keyPressed(KeyEvent e) {
-        pressButton = e.getKeyCode() == KeyEvent.VK_W;
     }
 
     @Override
@@ -347,8 +220,4 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-    }
 }
