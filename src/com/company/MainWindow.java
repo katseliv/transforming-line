@@ -25,7 +25,7 @@ public class MainWindow extends JFrame {
         buttonsPanel.add(textField);
         action = new JButton("Complete");
         buttonsPanel.add(action, BorderLayout.CENTER);
-        delete = new JButton("Delete");
+        delete = new JButton("Clear");
         buttonsPanel.add(delete, BorderLayout.CENTER);
         buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
         delete.addActionListener(new ActionListener() {

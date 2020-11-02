@@ -1,5 +1,6 @@
-package com.company;
+package com.company.mess;
 
+import com.company.*;
 import com.company.algorithms.BresenhamDrawer;
 import com.company.algorithms.BufferedImagePixelDrawer;
 import com.company.interfaces.LineDrawer;
