@@ -5,7 +5,7 @@ import java.awt.*;
 public class Circle {
     private RealPoint center;
     private double size;
-    private Color color = Color.GREEN;
+    private Color color = Color.BLACK;
 
     public Circle(RealPoint center, double size) {
         this.center = center;

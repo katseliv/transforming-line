@@ -12,10 +12,9 @@ public class MainWindow extends JFrame {
     private JPanel buttonsPanel;
     private TextField textField;
     private JButton action;
+    private JButton create;
     private JButton edit;
     private JButton delete;
-    private int i = 0;
-    private int j = 0;
 
     public MainWindow() throws HeadlessException {
         super("Анимация линии");
@@ -26,6 +25,8 @@ public class MainWindow extends JFrame {
         this.add(buttonsPanel, BorderLayout.SOUTH);
         textField = new TextField();
         textField.setPreferredSize(new Dimension(100, 25));
+        this.addKeyListener(drawPanel);
+        this.setFocusable(true);
         //textField.setFocusable(false);
         buttonsPanel.add(textField);
         action = new JButton("Complete");
@@ -34,71 +35,50 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 drawPanel.timer.schedule(new TimerTask() {
+                    final List<BrokenLine> brokenLines = drawPanel.brokenLines;
+
+                    final BrokenLine brokenLine1 = brokenLines.get(0);
+                    final BrokenLine brokenLine2 = brokenLines.get(1);
+
+                    final List<RealPoint> realPoints1 = brokenLine1.getRealPoints();
+                    final List<RealPoint> realPoints2 = brokenLine2.getRealPoints();
+
+                    double coefficient = 0.1;
+
                     @Override
                     public void run() {
-                        //drawPanel.function(20);
-                        //drawPanel.functionForCircle(20);
+                        if (realPoints1.size() == realPoints2.size()) {
+                            for (int i = 0; i < realPoints1.size(); i++) {
+                                double dx = realPoints2.get(i).getX() - realPoints1.get(i).getX();
+                                double dy = realPoints2.get(i).getY() - realPoints1.get(i).getY();
 
-                        List<CircleInt> allCircle = drawPanel.allCircle;
-
-                        CircleInt circle1 = allCircle.get(0);
-                        CircleInt circle2 = allCircle.get(1);
-
-                        ScreenPoint screenPoint = circle1.getCenter();
-                        ScreenPoint screenPoint1 = circle2.getCenter();
-
-                        int x1 = screenPoint.getX();
-                        int y1 = screenPoint.getY();
-                        int x2 = screenPoint1.getX();
-                        int y2 = screenPoint1.getY();
-
-                        double dx = x2 - x1;
-                        double dy = y2 - y1;
-
-                        if (Math.abs(dx) > Math.abs(dy)) { //горизонтальная
-                            double k = dy / dx;
-                            if (x1 > x2) {
-                                int temp = x1;
-                                x1 = x2;
-                                x2 = temp;
-                                temp = y1;
-                                y1 = y2;
-                                y2 = temp;
-                            }
-                            j++;
-                            double i = k * (j - x1) + y1;
-                            circle1.setCenter(new ScreenPoint(j, (int) i));
-                            if (circle1.getCenter().getX() == circle2.getCenter().getX() && circle1.getCenter().getY() == circle2.getCenter().getY()) {
-                                drawPanel.timer.cancel();
-                            }
-                        } else { //вертикальная
-                            double k = dx / dy;
-                            if (y1 > y2) {
-                                int temp = x1;
-                                x1 = x2;
-                                x2 = temp;
-                                temp = y1;
-                                y1 = y2;
-                                y2 = temp;
-                            }
-
-                            i++;
-                            double j = k * (i - y1) + x1;
-                            circle1.setCenter(new ScreenPoint((int) j, i));
-                            if (circle1.getCenter().getX() == circle2.getCenter().getX() && circle1.getCenter().getY() == circle2.getCenter().getY()) {
-                                drawPanel.timer.cancel();
+                                realPoints1.get(i).setX(realPoints1.get(i).getX() + dx * coefficient);
+                                realPoints1.get(i).setY(realPoints1.get(i).getY() + dy * coefficient);
                             }
                         }
-
+                        coefficient += 0.1;
+                        if (coefficient == 1.0){
+                            drawPanel.timer.cancel();
+                        }
                         repaint();
                     }
-                }, 0, 10);
+                }, 0, 100);
 
             }
+
         });
 
+        drawPanel.timer.purge();
 
         buttonsPanel.add(action, BorderLayout.CENTER);
+        create = new JButton("Create");
+        create.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                drawPanel.setCreateBrokenLine(true);
+            }
+        });
+        buttonsPanel.add(create, BorderLayout.CENTER);
         edit = new JButton("Edit");
         edit.addActionListener(new ActionListener() {
             @Override
@@ -116,54 +96,6 @@ public class MainWindow extends JFrame {
         buttonsPanel.add(delete, BorderLayout.CENTER);
         buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
 
-    }
-
-    private void function() {
-        List<CircleInt> allCircle = drawPanel.allCircle;
-
-        CircleInt circle1 = allCircle.get(0);
-        CircleInt circle2 = allCircle.get(1);
-
-        ScreenPoint screenPoint = circle1.getCenter();
-        ScreenPoint screenPoint1 = circle2.getCenter();
-
-        move(screenPoint.getX(), screenPoint.getY(), screenPoint1.getX(), screenPoint1.getY());
-    }
-
-    private void move(int x1, int y1, int x2, int y2) {
-        double dx = x2 - x1;
-        double dy = y2 - y1;
-
-        if (Math.abs(dx) > Math.abs(dy)) { //горизонтальная
-            double k = dy / dx;
-            if (x1 > x2) {
-                int temp = x1;
-                x1 = x2;
-                x2 = temp;
-                temp = y1;
-                y1 = y2;
-                y2 = temp;
-            }
-
-            for (int j = x1; j <= x2; j++) {
-                double i = k * (j - x1) + y1; //y = k(x - x1) + y1
-                //pixelDrawer.drawPixel(j, (int) i, color);
-            }
-        } else { //вертикальная
-            double k = dx / dy;
-            if (y1 > y2) {
-                int temp = x1;
-                x1 = x2;
-                x2 = temp;
-                temp = y1;
-                y1 = y2;
-                y2 = temp;
-            }
-            for (int i = y1; i <= y2; i++) {
-                double j = k * (i - y1) + x1; //x = (1 / k) * (y - y1) + x1
-                //pixelDrawer.drawPixel((int) j, (int) i, color);
-            }
-        }
     }
 
 }
