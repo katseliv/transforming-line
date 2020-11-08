@@ -17,6 +17,7 @@ import java.util.Timer;
 public class DrawPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener {
 
     public Timer timer = new Timer("Timer");
+    private Color color = Color.BLACK;
     private final List<Line> allLines = new ArrayList<>();
     public final List<Circle> allCircle = new ArrayList<>();
     public final List<BrokenLine> brokenLines = new ArrayList<>();
@@ -98,7 +99,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     }
 
     private void drawLine(LineDrawer lineDrawer, RealPoint p1, RealPoint p2) {
-        lineDrawer.drawLine(screenConverter.R2S(p1), screenConverter.R2S(p2), Color.BLACK);
+        lineDrawer.drawLine(screenConverter.R2S(p1), screenConverter.R2S(p2), color);
     }
 
     private void drawCircle(OvalDrawer ovalDrawer, Circle circle) {
@@ -113,6 +114,25 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     public void setEditBrokenLine(boolean editBrokenLine) {
         this.editBrokenLine = editBrokenLine;
         createBrokenLine = false;
+    }
+
+    public void setColor(String c) {
+        switch (c) {
+            case "Black":
+                color = new Color(0, 0, 0);
+                break;
+            case "Green":
+                color = new Color(30, 165, 3);
+                break;
+            case "Violet":
+                color = new Color(90, 0, 186);
+                break;
+            case "Turquoise":
+                color = new Color(0, 137, 161);
+                break;
+
+        }
+        repaint();
     }
 
     public void clearField() {
@@ -164,8 +184,8 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
         if (editBrokenLine && indexOfLine != -1 && indexOfCircle != -1 && indexOfEditPoint != -1) {
             //System.out.println(indexOfLine + " " + indexOfEditPoint);
-            allCircle.get(indexOfCircle).getCenter().setX(realPosition.getX());
-            allCircle.get(indexOfCircle).getCenter().setY(realPosition.getY());
+            allCircle.get(indexOfCircle).setCenter(new RealPoint(realPosition.getX(), realPosition.getY()));
+
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
@@ -202,13 +222,14 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 //            createBrokenLine = true;
 //        }
 
-        if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1 && brokenLines.size() < 2) {
+        if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1 && brokenLines.size() < 2 && !editBrokenLine) {
             startPoint = new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY());
             currentPoint = new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY());
             currentCircle = new Circle(screenConverter.S2R(currentPosition), 10);
             realPoints.add(startPoint);
             allCircle.add(currentCircle);
             createBrokenLine = true;
+            setFocusable(true);
         }
 
         if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && brokenLines.size() < 2) {
@@ -252,8 +273,9 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             //allCircle.add(currentCircle);
 
             whatNearestPoint(new ScreenPoint(e.getX(), e.getY()));
-            allCircle.get(indexOfCircle).getCenter().setX(realPosition.getX());
-            allCircle.get(indexOfCircle).getCenter().setY(realPosition.getY());
+            allCircle.get(indexOfCircle).setCenter(new RealPoint(realPosition.getX(), realPosition.getY()));
+            //allCircle.get(indexOfCircle).getCenter().setX(realPosition.getX());
+            //allCircle.get(indexOfCircle).getCenter().setY(realPosition.getY());
 
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
@@ -306,6 +328,8 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         }
 
         if (e.getButton() == MouseEvent.BUTTON3 && editBrokenLine) {
+            allCircle.get(indexOfCircle).setCenter(new RealPoint(realPosition.getX(), realPosition.getY()));
+
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
@@ -332,11 +356,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         for (int i = 0; i < Math.abs(clicks); i++) {
             scale *= coefficient;
         }
-
-        //radius = (int) (radius * scale);
-//        for (Circle circle : allCircle){
-//            circle.setSize(radius * scale);
-//        }
 
         screenConverter.setRealWidth(screenConverter.getRealWidth() * scale);
         screenConverter.setRealHeight(screenConverter.getRealHeight() * scale);
