@@ -57,6 +57,9 @@ public class MainWindow extends JFrame {
                     final List<RealPoint> realPoints1 = brokenLine1.getRealPoints();
                     final List<RealPoint> realPoints2 = brokenLine2.getRealPoints();
 
+                    final List<Circle> circles1 = brokenLine1.getCircles();
+                    //final List<Circle> circles2 = brokenLine2.getCircles();
+
                     double coefficient = 0.0001;
 
                     @Override
@@ -68,11 +71,18 @@ public class MainWindow extends JFrame {
 
                                 realPoints1.get(i).setX(realPoints1.get(i).getX() + dx * coefficient);
                                 realPoints1.get(i).setY(realPoints1.get(i).getY() + dy * coefficient);
+                                circles1.get(i).setCenter(new RealPoint(realPoints1.get(i).getX() + dx * coefficient, realPoints1.get(i).getY() + dy * coefficient));
                             }
                         }
                         coefficient += 0.0001;
                         if (coefficient == 1.0) {
+                            for (int i = 0; i < realPoints1.size(); i++) {
+                                realPoints1.get(i).setX(realPoints2.get(i).getX());
+                                realPoints1.get(i).setY(realPoints2.get(i).getY());
+                                circles1.get(i).setCenter(new RealPoint(realPoints2.get(i).getX(), realPoints2.get(i).getY()));
+                            }
                             drawPanel.timer.cancel();
+                            drawPanel.timer.purge();
                         }
                         repaint();
                     }
@@ -81,7 +91,7 @@ public class MainWindow extends JFrame {
             }
 
         });
-        drawPanel.timer.purge();
+
         action.setFont(FONT);
         buttonsPanel.add(action);
 
@@ -101,34 +111,19 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JComboBox<String> cb = (JComboBox<String>) e.getSource();
-                String conditionName = (String)cb.getSelectedItem();
-                switch(Objects.requireNonNull(conditionName)){
+                String conditionName = (String) cb.getSelectedItem();
+                switch (Objects.requireNonNull(conditionName)) {
                     case "Create":
                         drawPanel.setCreateBrokenLine(true);
-                        drawPanel.setEditBrokenLine(false);
                         break;
-                    case"Edit":
-                        drawPanel.setCreateBrokenLine(false);
+                    case "Edit":
+                        //drawPanel.timer.cancel();
                         drawPanel.setEditBrokenLine(true);
                         break;
                 }
             }
         });
         buttonsPanel.add(comboBoxConditions);
-
-//        JRadioButton create = new JRadioButton("Create", true);
-//        create.setFont(FONT);
-//        create.addActionListener(e -> drawPanel.setCreateBrokenLine(true));
-//        buttonsPanel.add(create);
-//
-//        JRadioButton edit = new JRadioButton("Edit", false);
-//        edit.setFont(FONT);
-//        edit.addActionListener(e -> drawPanel.setEditBrokenLine(true));
-//        buttonsPanel.add(edit);
-//
-//        ButtonGroup buttonGroup = new ButtonGroup();
-//        buttonGroup.add(create);
-//        buttonGroup.add(edit);
 
         Label labelColors = new Label("Choose color:");
         labelColors.setFont(FONT);
@@ -152,31 +147,6 @@ public class MainWindow extends JFrame {
             }
         });
         buttonsPanel.add(comboBoxColors);
-
-//        JRadioButton black = new JRadioButton("Black", true);
-//        black.setFont(FONT);
-//        black.addActionListener(e -> drawPanel.setColor(0));
-//        buttonsPanel.add(black);
-//
-//        JRadioButton green = new JRadioButton("Green", false);
-//        green.setFont(FONT);
-//        green.addActionListener(e -> drawPanel.setColor(1));
-//        buttonsPanel.add(green);
-//
-//        JRadioButton violet = new JRadioButton("Violet", false);
-//        violet.setFont(FONT);
-//        violet.addActionListener(e -> drawPanel.setColor(2));
-//        buttonsPanel.add(violet);
-//
-//        JRadioButton turquoise = new JRadioButton("Turquoise", false);
-//        turquoise.setFont(FONT);
-//        turquoise.addActionListener(e -> drawPanel.setColor(3));
-//        buttonsPanel.add(turquoise);
-//
-//        ButtonGroup buttonColor = new ButtonGroup();
-//        buttonColor.add(green);
-//        buttonColor.add(violet);
-//        buttonColor.add(turquoise);
 
         delete.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

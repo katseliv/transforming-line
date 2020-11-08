@@ -1,11 +1,8 @@
 package com.company;
 
-import java.awt.*;
-
 public class Circle {
     private RealPoint center;
     private double size;
-    private Color color = Color.BLACK;
 
     public Circle(RealPoint center, double size) {
         this.center = center;
@@ -26,13 +23,5 @@ public class Circle {
 
     public void setSize(double size) {
         this.size = size;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
     }
 }
