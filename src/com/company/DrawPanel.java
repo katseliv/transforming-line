@@ -1,8 +1,9 @@
 package com.company;
 
-import com.company.algorithms.Bezier;
 import com.company.algorithms.BresenhamDrawer;
 import com.company.algorithms.BufferedImagePixelDrawer;
+import com.company.figures.Circle;
+import com.company.figures.Curve;
 import com.company.interfaces.LineDrawer;
 import com.company.interfaces.OvalDrawer;
 import com.company.interfaces.PixelDrawer;
@@ -13,11 +14,9 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
-import java.util.Timer;
 
 public class DrawPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener {
 
-    public Timer timer = new Timer();
     private Color color = Color.BLACK;
     private Curve animateCurve = new Curve();
     private final List<Curve> bezierCurves = new ArrayList<>();
@@ -83,23 +82,23 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
         for (Curve curve : bezierCurves) {
             if (bezierCurve != null) {
-                bezierGoGo(bezierCurve.getRealPoints(), lineDrawer);
+                createBezierCurve(bezierCurve.getRealPoints(), lineDrawer);
             }
-            bezierGoGo(curve.getRealPoints(), lineDrawer);
+            createBezierCurve(curve.getRealPoints(), lineDrawer);
         }
 
         if (animateCurve != null) {
             drawCurve(animateCurve, lineDrawer, ovalDrawer);
-            bezierGoGo(animateCurve.getRealPoints(), lineDrawer);
+            createBezierCurve(animateCurve.getRealPoints(), lineDrawer);
         }
 
         g2d.drawImage(bufferedImage, 0, 0, null);
         g_bufferImage.dispose();
     }
 
-    public void bezierGoGo(List<RealPoint> sourcePoints, LineDrawer lineDrawer) {
+    public void createBezierCurve(List<RealPoint> sourcePoints, LineDrawer lineDrawer) {
         // ф-ия расчитывает финальный набор точек,
-        // по которым будет строится кривуля, а затем рисует ее
+        // по которым будет строится кривая, а затем рисует ее
         List<RealPoint> finalPoints = new ArrayList<>();
 
         for (double t = 0; t <= 1; t += 0.01)
@@ -116,15 +115,15 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         int n = realPoints.size() - 1;
         for (int i = 0; i <= n; i++) {
             double pow = Math.pow(1 - t, n - i);
-            x += fact(n) / (fact(i) * fact(n - i)) * realPoints.get(i).getX() * Math.pow(t, i) * pow;
-            y += fact(n) / (fact(i) * fact(n - i)) * realPoints.get(i).getY() * Math.pow(t, i) * pow;
+            x += factorial(n) / (factorial(i) * factorial(n - i)) * realPoints.get(i).getX() * Math.pow(t, i) * pow;
+            y += factorial(n) / (factorial(i) * factorial(n - i)) * realPoints.get(i).getY() * Math.pow(t, i) * pow;
         }
 
         return new RealPoint(x, y);
     }
 
-    private double fact(double arg) {
-        if (arg < 0) throw new RuntimeException("negative argument.");
+    private double factorial(double arg) {
+        if (arg < 0) throw new RuntimeException("Negative argument");
         if (arg == 0) return 1;
 
         double result = 1;
@@ -207,7 +206,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     }
 
     public void clearField() {
-        timer = new Timer();
         animateCurve = null;
         bezierCurves.clear();
         realPoints.clear();
@@ -331,13 +329,12 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         } else if (e.getButton() == MouseEvent.BUTTON3 && editBrokenLine) {
 
             indexOfLine = whatNearestPoint(brokenLines, currentPosition);
-//            indexOfCurve = whatNearestPoint(bezierCurves, currentPosition);
 
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
 
-//            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
-//            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+            bezierCurves.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+            bezierCurves.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
 
         repaint();

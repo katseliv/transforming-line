@@ -1,29 +1,24 @@
 package com.company;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class Clock extends Label{
 
-    Timer timer = new Timer();
+    Timer timer;
+    TimerTask timerTask;
 
     public Clock(String text) {
         this.setText(text);
-//        JFrame f = new JFrame("Seconds");
-//        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        f.add(timeLabel);
-//        f.pack();
-//        f.setLocationRelativeTo(null);
-//        f.setVisible(true);
-
     }
 
     public void start(){
-        timer.schedule(new UpdateUITask(), 0, 1);
+        this.timer = new Timer();
+        this.timerTask = new UpdateUITask();
+        timer.schedule(timerTask, 0, 1);
     }
-
+    
     public void stop(){
         timer.cancel();
     }
@@ -40,6 +35,10 @@ public class Clock extends Label{
                     setText(e.format(nSeconds++));
                 }
             });
+        }
+
+        public int getSeconds() {
+            return nSeconds;
         }
     }
 }

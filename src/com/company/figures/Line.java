@@ -1,4 +1,6 @@
-package com.company;
+package com.company.figures;
+
+import com.company.RealPoint;
 
 public class Line {
     private RealPoint p1, p2;

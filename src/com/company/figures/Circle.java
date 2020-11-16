@@ -1,4 +1,6 @@
-package com.company;
+package com.company.figures;
+
+import com.company.RealPoint;
 
 public class Circle {
     private RealPoint center;

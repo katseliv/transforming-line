@@ -1,4 +1,6 @@
-package com.company;
+package com.company.figures;
+
+import com.company.RealPoint;
 
 import java.util.ArrayList;
 import java.util.List;

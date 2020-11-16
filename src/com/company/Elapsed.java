@@ -19,10 +19,4 @@ public class Elapsed {
         return day + " : " + dateFormat.format(new Date(elapsed));
     }
 
-//    public static void main(String[] args) {
-//        Elapsed e = new Elapsed();
-//        for (long t = 0; t < 3 * MS_DAY; t += MS_DAY / 2) {
-//            System.out.println(e.format(t));
-//        }
-//    }
 }

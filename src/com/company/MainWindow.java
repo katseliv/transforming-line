@@ -1,23 +1,24 @@
 package com.company;
 
+import com.company.figures.Curve;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainWindow extends JFrame {
+    private Timer timer;
     private DrawPanel drawPanel;
     private JPanel buttonsPanel;
     private double coefficient = 0;
     private double step;
     private final double goal = 1 + step;
-    private Clock clock = new Clock("0 : 00 : 00 : 00 : 0");
+    private final Clock clock = new Clock("0 : 00 : 00 : 00 : 0");
     private final Label conditions = new Label("Condition: ");
     private final TextField textFieldTime = new TextField();
     private final JButton action = new JButton("Complete");
@@ -57,20 +58,18 @@ public class MainWindow extends JFrame {
         action.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent a) {
+                timer = new Timer();
+                clock.setText("0 : 00 : 00 : 00 : 0");
+                clock.start();
                 try {
                     double time = Double.parseDouble(textFieldTime.getText());
                     step = 1 / (time * 1000);
-                    coefficient = 0;
-                    clock.start();
 
-                    drawPanel.timer.schedule(new TimerTask() {
-                        final List<Curve> brokenLines = drawPanel.getBrokenLines();
-                        final List<Curve> bezierCurves = drawPanel.getBezierCurves();
+                    timer.schedule(new TimerTask() {
+                        List<Curve> bezierCurves = drawPanel.getBezierCurves();
 
-                        final Curve brokenLine1 = brokenLines.get(0);
-                        final Curve brokenLine2 = brokenLines.get(1);
-                        final Curve bezierCurve1 = bezierCurves.get(0);
-                        final Curve bezierCurve2 = bezierCurves.get(1);
+                        Curve bezierCurve1 = bezierCurves.get(0);
+                        Curve bezierCurve2 = bezierCurves.get(1);
 
                         @Override
                         public void run() {
@@ -83,7 +82,7 @@ public class MainWindow extends JFrame {
 
                 } catch (Exception e) {
                     conditions.setText("Condition: " + e.getMessage());
-                    drawPanel.timer.cancel();
+                    timer.cancel();
                 }
             }
 
@@ -172,15 +171,11 @@ public class MainWindow extends JFrame {
             coefficient += step;
 
             if (coefficient > goal) {
-                for (int i = 0; i < realPointsA.size(); i++) {
-                    System.out.println(new RealPoint(
-                            realPointsB.get(i).getX(),
-                            realPointsB.get(i).getY()));
-                }
                 clock.stop();
-                drawPanel.timer.cancel();
-                clock = new Clock("0 : 00 : 00 : 00 : 0");
+                timer.cancel();
                 conditions.setText("Condition: " + "Finished!");
+                currentCurve = null;
+                coefficient = 0;
             }
 
         } catch (IndexOutOfBoundsException e) {
