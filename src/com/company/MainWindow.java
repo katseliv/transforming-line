@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
@@ -11,83 +14,77 @@ import java.util.TimerTask;
 public class MainWindow extends JFrame {
     private DrawPanel drawPanel;
     private JPanel buttonsPanel;
+    private double coefficient = 0;
+    private double step;
+    private final double goal = 1 + step;
+    private Clock clock = new Clock("0 : 00 : 00 : 00 : 0");
+    private final Label conditions = new Label("Condition: ");
     private final TextField textFieldTime = new TextField();
-    private final TextField textFieldSpeed = new TextField();
     private final JButton action = new JButton("Complete");
     private final JButton delete = new JButton("Clear");
-    private static final Font FONT = new Font(Font.SERIF, Font.ITALIC, 16);
+    private static final Font FONT = new Font(Font.SERIF, Font.ITALIC, 20);
 
     public MainWindow() throws HeadlessException {
         super("Animation line");
 
         panel();
-
         this.add(drawPanel);
         this.add(buttonsPanel, BorderLayout.NORTH);
         this.addKeyListener(drawPanel);
         this.setFocusable(true);
-        //textField.setFocusable(false);
     }
 
     private void panel() {
         drawPanel = new DrawPanel();
         buttonsPanel = new JPanel();
 
-        Label time = new Label("Time ");
-        time.setFont(FONT);
-        textFieldTime.setPreferredSize(new Dimension(100, 25));
-        Label speed = new Label("Speed ");
-        speed.setFont(FONT);
-        textFieldSpeed.setPreferredSize(new Dimension(100, 25));
-        buttonsPanel.add(time);
-        buttonsPanel.add(textFieldTime);
-        buttonsPanel.add(speed);
-        buttonsPanel.add(textFieldSpeed);
+        clock.setPreferredSize(new Dimension(200, 25));
+        clock.setFont(FONT);
+        buttonsPanel.add(clock);
 
-        //double time = Double.parseDouble(textFieldTime.getText()) / 100;
+        conditions.setPreferredSize(new Dimension(200, 25));
+        conditions.setFont(FONT);
+        buttonsPanel.add(conditions);
+
+        Label textTime = new Label("Time");
+        textTime.setFont(FONT);
+
+        textFieldTime.setFont(new Font(Font.SERIF, Font.PLAIN, 25));
+        textFieldTime.setPreferredSize(new Dimension(100, 30));
+        buttonsPanel.add(textTime);
+        buttonsPanel.add(textFieldTime);
+
         action.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                drawPanel.timer.schedule(new TimerTask() {
-                    final List<BrokenLine> brokenLines = drawPanel.brokenLines;
+            public void actionPerformed(ActionEvent a) {
+                try {
+                    double time = Double.parseDouble(textFieldTime.getText());
+                    step = 1 / (time * 1000);
+                    coefficient = 0;
+                    clock.start();
 
-                    final BrokenLine brokenLine1 = brokenLines.get(0);
-                    final BrokenLine brokenLine2 = brokenLines.get(1);
+                    drawPanel.timer.schedule(new TimerTask() {
+                        final List<Curve> brokenLines = drawPanel.getBrokenLines();
+                        final List<Curve> bezierCurves = drawPanel.getBezierCurves();
 
-                    final List<RealPoint> realPoints1 = brokenLine1.getRealPoints();
-                    final List<RealPoint> realPoints2 = brokenLine2.getRealPoints();
+                        final Curve brokenLine1 = brokenLines.get(0);
+                        final Curve brokenLine2 = brokenLines.get(1);
+                        final Curve bezierCurve1 = bezierCurves.get(0);
+                        final Curve bezierCurve2 = bezierCurves.get(1);
 
-                    final List<Circle> circles1 = brokenLine1.getCircles();
-                    //final List<Circle> circles2 = brokenLine2.getCircles();
-
-                    double coefficient = 0.0001;
-
-                    @Override
-                    public void run() {
-                        if (realPoints1.size() == realPoints2.size() && textFieldTime.getText() != null) {
-                            for (int i = 0; i < realPoints1.size(); i++) {
-                                double dx = realPoints2.get(i).getX() - realPoints1.get(i).getX();
-                                double dy = realPoints2.get(i).getY() - realPoints1.get(i).getY();
-
-                                realPoints1.get(i).setX(realPoints1.get(i).getX() + dx * coefficient);
-                                realPoints1.get(i).setY(realPoints1.get(i).getY() + dy * coefficient);
-                                circles1.get(i).setCenter(new RealPoint(realPoints1.get(i).getX() + dx * coefficient, realPoints1.get(i).getY() + dy * coefficient));
-                            }
+                        @Override
+                        public void run() {
+                            Curve curve = function(bezierCurve1, bezierCurve2);
+                            drawPanel.setAnimateCurve(curve);
+                            repaint();
                         }
-                        coefficient += 0.0001;
-                        if (coefficient == 1.0) {
-                            for (int i = 0; i < realPoints1.size(); i++) {
-                                realPoints1.get(i).setX(realPoints2.get(i).getX());
-                                realPoints1.get(i).setY(realPoints2.get(i).getY());
-                                circles1.get(i).setCenter(new RealPoint(realPoints2.get(i).getX(), realPoints2.get(i).getY()));
-                            }
-                            drawPanel.timer.cancel();
-                            drawPanel.timer.purge();
-                        }
-                        repaint();
-                    }
-                }, 0, 100);
 
+                    }, 0, 1);
+
+                } catch (Exception e) {
+                    conditions.setText("Condition: " + e.getMessage());
+                    drawPanel.timer.cancel();
+                }
             }
 
         });
@@ -105,7 +102,6 @@ public class MainWindow extends JFrame {
         };
 
         JComboBox<String> comboBoxConditions = new JComboBox<>(conditions);
-        //comboBox.setEditable(true);
         comboBoxConditions.setFont(FONT);
         comboBoxConditions.addActionListener(new ActionListener() {
             @Override
@@ -117,7 +113,6 @@ public class MainWindow extends JFrame {
                         drawPanel.setCreateBrokenLine(true);
                         break;
                     case "Edit":
-                        //drawPanel.timer.cancel();
                         drawPanel.setEditBrokenLine(true);
                         break;
                 }
@@ -135,8 +130,8 @@ public class MainWindow extends JFrame {
                 "Violet",
                 "Turquoise"
         };
+
         JComboBox<String> comboBoxColors = new JComboBox<>(colors);
-        //comboBox.setEditable(true);
         comboBoxColors.setFont(FONT);
         comboBoxColors.addActionListener(new ActionListener() {
             @Override
@@ -155,8 +150,43 @@ public class MainWindow extends JFrame {
         });
         delete.setFont(FONT);
         buttonsPanel.add(delete);
-
-        buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 15));
+        buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 40, 15));
     }
 
+    public Curve function(Curve a, Curve b) {
+        final List<RealPoint> realPointsA = a.getRealPoints();
+        final List<RealPoint> realPointsB = b.getRealPoints();
+
+        Curve currentCurve = new Curve();
+        List<RealPoint> curvePoints = currentCurve.getRealPoints();
+
+        try {
+            for (int i = 0; i < realPointsA.size(); i++) {
+                double vectorX = realPointsB.get(i).getX() - realPointsA.get(i).getX();
+                double vectorY = realPointsB.get(i).getY() - realPointsA.get(i).getY();
+                curvePoints.add(new RealPoint(
+                        realPointsA.get(i).getX() + vectorX * coefficient,
+                        realPointsA.get(i).getY() + vectorY * coefficient));
+            }
+
+            coefficient += step;
+
+            if (coefficient > goal) {
+                for (int i = 0; i < realPointsA.size(); i++) {
+                    System.out.println(new RealPoint(
+                            realPointsB.get(i).getX(),
+                            realPointsB.get(i).getY()));
+                }
+                clock.stop();
+                drawPanel.timer.cancel();
+                clock = new Clock("0 : 00 : 00 : 00 : 0");
+                conditions.setText("Condition: " + "Finished!");
+            }
+
+        } catch (IndexOutOfBoundsException e) {
+            conditions.setText("Condition: " + e.getMessage());
+        }
+
+        return currentCurve;
+    }
 }

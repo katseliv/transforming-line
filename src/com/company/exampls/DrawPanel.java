@@ -22,7 +22,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     private Color color = Color.BLACK;
     private final List<Line> allLines = new ArrayList<>();
     public final List<Circle> allCircle = new ArrayList<>();
-    public final List<BrokenLine> brokenLines = new ArrayList<>();
+    public final List<Curve> brokenLines = new ArrayList<>();
     private final Line xAxis = new Line(new RealPoint(-1, 0), new RealPoint(1, 0));
     private final Line yAxis = new Line(new RealPoint(0, -1), new RealPoint(0, 1));
     private final ScreenConverter screenConverter = new ScreenConverter(-2, 2, 4, 4, 800, 600);
@@ -80,7 +80,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             firstPoint = realPoint;
         }
 
-        for (BrokenLine brokenLine : brokenLines) {
+        for (Curve brokenLine : brokenLines) {
             firstPoint = null;
             for (RealPoint realPoint : brokenLine.getRealPoints()) {
                 if (firstPoint == null) {
@@ -105,7 +105,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     }
 
     private void drawCircle(OvalDrawer ovalDrawer, Circle circle) {
-        ovalDrawer.drawOval(screenConverter.R2S(circle.getCenter()), (int) circle.getSize(), (int) circle.getSize(), color);
+        ovalDrawer.drawOval(screenConverter.R2S(circle.getCenter()), (int) circle.getRadius(), (int) circle.getRadius(), color);
     }
 
     public void setCreateBrokenLine(boolean createBrokenLine) {
@@ -158,7 +158,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     private int indexOfCircle = -1;
     private boolean editBrokenLine = false;
 
-    private BrokenLine brokenLine = new BrokenLine();
+    private Curve brokenLine = new Curve();
     private final List<RealPoint> realPoints = new ArrayList<>();
 
     @Override
@@ -204,7 +204,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         }
 
         if (currentPoint != null && createBrokenLine) {
-            currentCircle = new Circle(screenConverter.S2R(currentPosition), 10);
+            currentCircle = new Circle(screenConverter.S2R(currentPosition));
             currentCircle.setCenter(screenConverter.S2R(currentPosition));
             currentPoint.setX(screenConverter.S2R(currentPosition).getX());
             currentPoint.setY(screenConverter.S2R(currentPosition).getY());
@@ -227,7 +227,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1 && brokenLines.size() < 2 && !editBrokenLine) {
             startPoint = new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY());
             currentPoint = new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY());
-            currentCircle = new Circle(screenConverter.S2R(currentPosition), 10);
+            currentCircle = new Circle(screenConverter.S2R(currentPosition));
             realPoints.add(startPoint);
             allCircle.add(currentCircle);
             createBrokenLine = true;
@@ -239,7 +239,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             brokenLine.getRealPoints().addAll(realPoints);
             brokenLines.add(brokenLine);
             allCircle.add(currentCircle);
-            brokenLine = new BrokenLine();
+            brokenLine = new Curve();
             startPoint = null;
             realPoints.clear();
             currentCircle = null;
@@ -289,7 +289,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     public void whatNearestPoint(ScreenPoint screenPoint) {
         double min = Integer.MAX_VALUE;
 
-        for (BrokenLine brokenLine : brokenLines) {
+        for (Curve brokenLine : brokenLines) {
             for (RealPoint realPoint : brokenLine.getRealPoints()) {
                 double distance = countDistance(realPoint, screenConverter.S2R(screenPoint));
                 if (distance < min) {
@@ -320,7 +320,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         if (e.getButton() == MouseEvent.BUTTON3 && !editBrokenLine && !createBrokenLine) {
             lastPosition = null;
         } else if (e.getButton() == MouseEvent.BUTTON1 && !editBrokenLine && !createBrokenLine) {
-            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())), 5);
+            currentCircle = new Circle(screenConverter.S2R(new ScreenPoint(e.getX(), e.getY())));
             allCircle.add(currentCircle);
             allLines.add(currentLine);
             currentLine = new Line(

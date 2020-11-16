@@ -24,4 +24,12 @@ public class RealPoint {
     public void setY(double y) {
         this.y = y;
     }
+
+    @Override
+    public String toString() {
+        return "RealPoint{" +
+                "x = " + x +
+                ", y = " + y +
+                '}';
+    }
 }

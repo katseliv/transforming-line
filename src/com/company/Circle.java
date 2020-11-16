@@ -2,11 +2,9 @@ package com.company;
 
 public class Circle {
     private RealPoint center;
-    private double size;
 
-    public Circle(RealPoint center, double size) {
+    public Circle(RealPoint center) {
         this.center = center;
-        this.size = size;
     }
 
     public RealPoint getCenter() {
@@ -17,11 +15,7 @@ public class Circle {
         this.center = center;
     }
 
-    public double getSize() {
-        return size;
-    }
-
-    public void setSize(double size) {
-        this.size = size;
+    public double getRadius() {
+        return 10;
     }
 }
