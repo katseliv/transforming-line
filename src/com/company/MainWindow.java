@@ -66,10 +66,10 @@ public class MainWindow extends JFrame {
                     step = 1 / (time * 1000);
 
                     timer.schedule(new TimerTask() {
-                        List<Curve> bezierCurves = drawPanel.getBezierCurves();
+                        final List<Curve> bezierCurves = drawPanel.getBezierCurves();
 
-                        Curve bezierCurve1 = bezierCurves.get(0);
-                        Curve bezierCurve2 = bezierCurves.get(1);
+                        final Curve bezierCurve1 = bezierCurves.get(0);
+                        final Curve bezierCurve2 = bezierCurves.get(1);
 
                         @Override
                         public void run() {
@@ -145,6 +145,8 @@ public class MainWindow extends JFrame {
         delete.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 drawPanel.clearField();
+                timer.cancel();
+                clock.setText("0 : 00 : 00 : 00 : 0");
             }
         });
         delete.setFont(FONT);

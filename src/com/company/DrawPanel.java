@@ -2,6 +2,7 @@ package com.company;
 
 import com.company.algorithms.BresenhamDrawer;
 import com.company.algorithms.BufferedImagePixelDrawer;
+import com.company.algorithms.DottedLineDrawer;
 import com.company.figures.Circle;
 import com.company.figures.Curve;
 import com.company.interfaces.LineDrawer;
@@ -43,7 +44,8 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         g_bufferImage.setColor(Color.BLACK);
 
         PixelDrawer pixelDrawer = new BufferedImagePixelDrawer(bufferedImage);
-        LineDrawer lineDrawer = new BresenhamDrawer(pixelDrawer);
+        LineDrawer dottedLineDrawer = new DottedLineDrawer(g_bufferImage);
+        LineDrawer bresenhamLineDrawer = new BresenhamDrawer(pixelDrawer);
         OvalDrawer ovalDrawer = new BresenhamDrawer(pixelDrawer);
 
         g.setColor(Color.black);
@@ -53,7 +55,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             Circle circle = new Circle(point);
             drawCircle(ovalDrawer, circle);
             if (startPoint != null) {
-                drawLine(lineDrawer, startPoint, currentPoint);
+                drawLine(dottedLineDrawer, startPoint, currentPoint);
             }
             if (currentCircle != null) {
                 drawCircle(ovalDrawer, currentCircle);
@@ -62,7 +64,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                 firstPoint = point;
                 continue;
             }
-            drawLine(lineDrawer, firstPoint, point);
+            drawLine(dottedLineDrawer, firstPoint, point);
             firstPoint = point;
         }
 
@@ -75,21 +77,21 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                     firstPoint = brokenLine.getRealPoints().get(i);
                     continue;
                 }
-                drawLine(lineDrawer, firstPoint, brokenLine.getRealPoints().get(i));
+                drawLine(dottedLineDrawer, firstPoint, brokenLine.getRealPoints().get(i));
                 firstPoint = brokenLine.getRealPoints().get(i);
             }
         }
 
         for (Curve curve : bezierCurves) {
             if (bezierCurve != null) {
-                createBezierCurve(bezierCurve.getRealPoints(), lineDrawer);
+                createBezierCurve(bezierCurve.getRealPoints(), bresenhamLineDrawer);
             }
-            createBezierCurve(curve.getRealPoints(), lineDrawer);
+            createBezierCurve(curve.getRealPoints(), bresenhamLineDrawer);
         }
 
         if (animateCurve != null) {
-            drawCurve(animateCurve, lineDrawer, ovalDrawer);
-            createBezierCurve(animateCurve.getRealPoints(), lineDrawer);
+            drawCurve(animateCurve, dottedLineDrawer, ovalDrawer);
+            createBezierCurve(animateCurve.getRealPoints(), bresenhamLineDrawer);
         }
 
         g2d.drawImage(bufferedImage, 0, 0, null);
