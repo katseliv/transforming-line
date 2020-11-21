@@ -18,7 +18,7 @@ public class MainWindow extends JFrame {
     private double coefficient = 0;
     private double step;
     private final double goal = 1 + step;
-    private final Clock clock = new Clock("0 : 00 : 00 : 00 : 0");
+    //private final Clock clock = new Clock("0 : 00 : 00 : 00 : 0");
     private final Label conditions = new Label("Condition: ");
     private final TextField textFieldTime = new TextField();
     private final JButton action = new JButton("Complete");
@@ -39,9 +39,9 @@ public class MainWindow extends JFrame {
         drawPanel = new DrawPanel();
         buttonsPanel = new JPanel();
 
-        clock.setPreferredSize(new Dimension(200, 25));
-        clock.setFont(FONT);
-        buttonsPanel.add(clock);
+//        clock.setPreferredSize(new Dimension(200, 25));
+//        clock.setFont(FONT);
+//        buttonsPanel.add(clock);
 
         conditions.setPreferredSize(new Dimension(200, 25));
         conditions.setFont(FONT);
@@ -59,8 +59,8 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent a) {
                 timer = new Timer();
-                clock.setText("0 : 00 : 00 : 00 : 0");
-                clock.start();
+                //clock.setText("0 : 00 : 00 : 00 : 0");
+                //clock.start();
                 try {
                     double time = Double.parseDouble(textFieldTime.getText());
                     step = 1 / (time * 1000);
@@ -145,8 +145,10 @@ public class MainWindow extends JFrame {
         delete.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 drawPanel.clearField();
-                timer.cancel();
-                clock.setText("0 : 00 : 00 : 00 : 0");
+
+                //timer.cancel();
+
+                //clock.setText("0 : 00 : 00 : 00 : 0");
             }
         });
         delete.setFont(FONT);
@@ -173,7 +175,7 @@ public class MainWindow extends JFrame {
             coefficient += step;
 
             if (coefficient > goal) {
-                clock.stop();
+                //clock.stop();
                 timer.cancel();
                 conditions.setText("Condition: " + "Finished!");
                 currentCurve = null;

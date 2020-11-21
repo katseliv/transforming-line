@@ -5,6 +5,7 @@ import com.company.algorithms.BufferedImagePixelDrawer;
 import com.company.algorithms.DottedLineDrawer;
 import com.company.figures.Circle;
 import com.company.figures.Curve;
+import com.company.figures.Line;
 import com.company.interfaces.LineDrawer;
 import com.company.interfaces.OvalDrawer;
 import com.company.interfaces.PixelDrawer;
@@ -89,6 +90,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             createBezierCurve(curve.getRealPoints(), bresenhamLineDrawer);
         }
 
+
         if (animateCurve != null) {
             drawCurve(animateCurve, dottedLineDrawer, ovalDrawer);
             createBezierCurve(animateCurve.getRealPoints(), bresenhamLineDrawer);
@@ -96,6 +98,28 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
         g2d.drawImage(bufferedImage, 0, 0, null);
         g_bufferImage.dispose();
+    }
+
+    private void drawLine(LineDrawer lineDrawer, RealPoint p1, RealPoint p2) {
+        lineDrawer.drawLine(screenConverter.R2S(p1), screenConverter.R2S(p2), color);
+    }
+
+    private void drawCurve(Curve curve, LineDrawer lineDrawer, OvalDrawer ovalDrawer) {
+        RealPoint firstPoint = null;
+        for (int i = 0; i < curve.getRealPoints().size(); i++) {
+            Circle circle = new Circle(curve.getRealPoints().get(i));
+            drawCircle(ovalDrawer, circle);
+            if (firstPoint == null) {
+                firstPoint = curve.getRealPoints().get(i);
+                continue;
+            }
+            drawLine(lineDrawer, firstPoint, curve.getRealPoints().get(i));
+            firstPoint = curve.getRealPoints().get(i);
+        }
+    }
+
+    private void drawCircle(OvalDrawer ovalDrawer, Circle circle) {
+        ovalDrawer.drawOval(screenConverter.R2S(circle.getCenter()), (int) circle.getRadius(), (int) circle.getRadius(), color);
     }
 
     public void createBezierCurve(List<RealPoint> sourcePoints, LineDrawer lineDrawer) {
@@ -142,28 +166,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             double y2 = points.get(i).getY();
             drawLine(lineDrawer, new RealPoint(x1, y1), new RealPoint(x2, y2));
         }
-    }
-
-    private void drawLine(LineDrawer lineDrawer, RealPoint p1, RealPoint p2) {
-        lineDrawer.drawLine(screenConverter.R2S(p1), screenConverter.R2S(p2), color);
-    }
-
-    private void drawCurve(Curve curve, LineDrawer lineDrawer, OvalDrawer ovalDrawer) {
-        RealPoint firstPoint = null;
-        for (int i = 0; i < curve.getRealPoints().size(); i++) {
-            Circle circle = new Circle(curve.getRealPoints().get(i));
-            drawCircle(ovalDrawer, circle);
-            if (firstPoint == null) {
-                firstPoint = curve.getRealPoints().get(i);
-                continue;
-            }
-            drawLine(lineDrawer, firstPoint, curve.getRealPoints().get(i));
-            firstPoint = curve.getRealPoints().get(i);
-        }
-    }
-
-    private void drawCircle(OvalDrawer ovalDrawer, Circle circle) {
-        ovalDrawer.drawOval(screenConverter.R2S(circle.getCenter()), (int) circle.getRadius(), (int) circle.getRadius(), color);
     }
 
     public List<Curve> getBezierCurves() {
@@ -228,7 +230,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     private boolean editBrokenLine = false;
 
     private Curve brokenLine = null;
-    private Curve bezierCurve = null;
+    private Curve bezierCurve = new Curve();
     private final List<RealPoint> realPoints = new ArrayList<>();
     private final List<RealPoint> bezierPoints = new ArrayList<>();
 
@@ -280,21 +282,11 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         ScreenPoint currentPosition = new ScreenPoint(e.getX(), e.getY());
 
         if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1 && brokenLines.size() < 2 && !editBrokenLine) {
-            bezierCurve = new Curve();
             bezierPoints.add(new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY()));
 
             brokenLine = new Curve();
             startPoint = new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY());
             currentPoint = new RealPoint(screenConverter.S2R(currentPosition).getX(), screenConverter.S2R(currentPosition).getY());
-
-//            if (currentCircle == null) {
-//                currentCircle = new Circle(screenConverter.S2R(currentPosition), 10);
-//            } else {
-//                currentCircle.setCenter(screenConverter.S2R(currentPosition));
-//            }
-//
-//            circles.add(currentCircle);
-//            currentCircle = null;
 
             realPoints.add(startPoint);
             createBrokenLine = true;
@@ -313,7 +305,8 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             bezierPoints.clear();
             startPoint = null;
             brokenLine = null;
-            bezierCurve = null;
+            bezierCurve = new Curve();
+            //bezierCurve = null;
             currentCircle = null;
             createBrokenLine = false;
         }
@@ -380,9 +373,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         } else if (e.getButton() == MouseEvent.BUTTON3 && editBrokenLine) {
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
             brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
-
-//            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
-//            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
 
         repaint();

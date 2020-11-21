@@ -7,8 +7,8 @@ import java.util.TimeZone;
 
 public class Elapsed {
 
-    public static final long MS_DAY = 24 * 60 * 60 * 1000;
-    private final DateFormat dateFormat = new SimpleDateFormat("HH : mm : ss : S");
+    public static final long MS_DAY = 24 * 60 * 60;
+    private final DateFormat dateFormat = new SimpleDateFormat("HH : mm : ss");
 
     public Elapsed() {
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
