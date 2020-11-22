@@ -69,30 +69,43 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             firstPoint = point;
         }
 
-        for (Curve brokenLine : brokenLines) {
-            firstPoint = null;
-            for (int i = 0; i < brokenLine.getRealPoints().size(); i++) {
-                Circle circle = new Circle(brokenLine.getRealPoints().get(i));
-                drawCircle(ovalDrawer, circle);
-                if (firstPoint == null) {
-                    firstPoint = brokenLine.getRealPoints().get(i);
-                    continue;
-                }
-                drawLine(dottedLineDrawer, firstPoint, brokenLine.getRealPoints().get(i));
-                firstPoint = brokenLine.getRealPoints().get(i);
-            }
-        }
+//        for (Curve brokenLine : brokenLines) {
+//            firstPoint = null;
+//            for (int i = 0; i < brokenLine.getRealPoints().size(); i++) {
+//                Circle circle = new Circle(brokenLine.getRealPoints().get(i));
+//                drawCircle(ovalDrawer, circle);
+//                if (firstPoint == null) {
+//                    firstPoint = brokenLine.getRealPoints().get(i);
+//                    continue;
+//                }
+//                drawLine(dottedLineDrawer, firstPoint, brokenLine.getRealPoints().get(i));
+//                firstPoint = brokenLine.getRealPoints().get(i);
+//            }
+//        }
 
         for (Curve curve : bezierCurves) {
+            firstPoint = null;
+            for (int i = 0; i < curve.getRealPoints().size(); i++) {
+                Circle circle = new Circle(curve.getRealPoints().get(i));
+                drawCircle(ovalDrawer, circle);
+                if (firstPoint == null) {
+                    firstPoint = curve.getRealPoints().get(i);
+                    continue;
+                }
+                drawLine(dottedLineDrawer, firstPoint, curve.getRealPoints().get(i));
+                firstPoint = curve.getRealPoints().get(i);
+            }
+
             if (bezierCurve != null) {
                 createBezierCurve(bezierCurve.getRealPoints(), bresenhamLineDrawer);
             }
+
             createBezierCurve(curve.getRealPoints(), bresenhamLineDrawer);
         }
 
 
         if (animateCurve != null) {
-            drawCurve(animateCurve, dottedLineDrawer, ovalDrawer);
+            drawCurve(animateCurve, dottedLineDrawer);
             createBezierCurve(animateCurve.getRealPoints(), bresenhamLineDrawer);
         }
 
@@ -104,11 +117,9 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         lineDrawer.drawLine(screenConverter.R2S(p1), screenConverter.R2S(p2), color);
     }
 
-    private void drawCurve(Curve curve, LineDrawer lineDrawer, OvalDrawer ovalDrawer) {
+    private void drawCurve(Curve curve, LineDrawer lineDrawer) {
         RealPoint firstPoint = null;
         for (int i = 0; i < curve.getRealPoints().size(); i++) {
-            Circle circle = new Circle(curve.getRealPoints().get(i));
-            drawCircle(ovalDrawer, circle);
             if (firstPoint == null) {
                 firstPoint = curve.getRealPoints().get(i);
                 continue;
@@ -170,10 +181,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
     public List<Curve> getBezierCurves() {
         return bezierCurves;
-    }
-
-    public List<Curve> getBrokenLines() {
-        return brokenLines;
     }
 
     public void setAnimateCurve(Curve animateCurve) {
@@ -251,9 +258,12 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             lastPosition = currentPosition;
         }
 
-        if (editBrokenLine && indexOfLine != -1 && indexOfEditPoint != -1) {
-            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
-            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+        if (editBrokenLine && indexOfCurve != -1 && indexOfEditPoint != -1) {
+            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+
+//            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+//            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
 
         repaint();
@@ -323,13 +333,15 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             lastPosition = new ScreenPoint(e.getX(), e.getY());
         } else if (e.getButton() == MouseEvent.BUTTON3 && editBrokenLine) {
 
-            indexOfLine = whatNearestPoint(brokenLines, currentPosition);
+//            indexOfLine = whatNearestPoint(brokenLines, currentPosition);
 
-            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
-            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+            indexOfCurve = whatNearestPoint(bezierCurves, currentPosition);
 
-            bezierCurves.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
-            bezierCurves.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+//            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+//            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+
+            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
 
         repaint();
@@ -371,8 +383,11 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         if (e.getButton() == MouseEvent.BUTTON3 && createBrokenLine) {
             lastPosition = null;
         } else if (e.getButton() == MouseEvent.BUTTON3 && editBrokenLine) {
-            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
-            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+            bezierCurves.get(indexOfCurve).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
+
+//            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setX(realPosition.getX());
+//            brokenLines.get(indexOfLine).getRealPoints().get(indexOfEditPoint).setY(realPosition.getY());
         }
 
         repaint();

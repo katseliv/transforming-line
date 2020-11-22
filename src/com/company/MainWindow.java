@@ -8,17 +8,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainWindow extends JFrame {
+
     private Timer timer;
     private DrawPanel drawPanel;
     private JPanel buttonsPanel;
     private double coefficient = 0;
     private double step;
     private final double goal = 1 + step;
-    //private final Clock clock = new Clock("0 : 00 : 00 : 00 : 0");
+    private int timeCounter = 0;
+    private final Label clockLabel = new Label("00 : 00");
     private final Label conditions = new Label("Condition: ");
     private final TextField textFieldTime = new TextField();
     private final JButton action = new JButton("Complete");
@@ -39,9 +39,9 @@ public class MainWindow extends JFrame {
         drawPanel = new DrawPanel();
         buttonsPanel = new JPanel();
 
-//        clock.setPreferredSize(new Dimension(200, 25));
-//        clock.setFont(FONT);
-//        buttonsPanel.add(clock);
+        clockLabel.setPreferredSize(new Dimension(100, 25));
+        clockLabel.setFont(FONT);
+        buttonsPanel.add(clockLabel);
 
         conditions.setPreferredSize(new Dimension(200, 25));
         conditions.setFont(FONT);
@@ -58,34 +58,32 @@ public class MainWindow extends JFrame {
         action.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent a) {
-                timer = new Timer();
-                //clock.setText("0 : 00 : 00 : 00 : 0");
-                //clock.start();
                 try {
                     double time = Double.parseDouble(textFieldTime.getText());
-                    step = 1 / (time * 1000);
+                    step = 1 / (time * 25);
 
-                    timer.schedule(new TimerTask() {
+                    timer = new Timer(40, new ActionListener() {
                         final List<Curve> bezierCurves = drawPanel.getBezierCurves();
 
                         final Curve bezierCurve1 = bezierCurves.get(0);
                         final Curve bezierCurve2 = bezierCurves.get(1);
 
                         @Override
-                        public void run() {
+                        public void actionPerformed(ActionEvent e) {
+                            timeCounter++;
+                            setClockLabel(timeCounter);
                             Curve curve = function(bezierCurve1, bezierCurve2);
                             drawPanel.setAnimateCurve(curve);
                             repaint();
                         }
-
-                    }, 0, 1);
+                    });
+                    timer.start();
 
                 } catch (Exception e) {
                     conditions.setText("Condition: " + e.getMessage());
-                    timer.cancel();
+                    timer.stop();
                 }
             }
-
         });
 
         action.setFont(FONT);
@@ -145,10 +143,9 @@ public class MainWindow extends JFrame {
         delete.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 drawPanel.clearField();
-
-                //timer.cancel();
-
-                //clock.setText("0 : 00 : 00 : 00 : 0");
+                if (action.isSelected()) {
+                    timer.stop();
+                }
             }
         });
         delete.setFont(FONT);
@@ -175,8 +172,8 @@ public class MainWindow extends JFrame {
             coefficient += step;
 
             if (coefficient > goal) {
-                //clock.stop();
-                timer.cancel();
+                timeCounter = 0;
+                timer.stop();
                 conditions.setText("Condition: " + "Finished!");
                 currentCurve = null;
                 coefficient = 0;
@@ -187,5 +184,14 @@ public class MainWindow extends JFrame {
         }
 
         return currentCurve;
+    }
+
+    private void setClockLabel(int time) {
+        if (time / 25 < 10) {
+            clockLabel.setText("00 : 0" + time / 25);
+        } else {
+            clockLabel.setText("00 : " + time / 25);
+        }
+
     }
 }
