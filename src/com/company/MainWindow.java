@@ -1,7 +1,6 @@
 package com.company;
 
 import com.company.figures.Curve;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class MainWindow extends JFrame {
-
     private Timer timer;
     private DrawPanel drawPanel;
     private JPanel buttonsPanel;
